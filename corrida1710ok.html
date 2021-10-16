@@ -1,0 +1,1179 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Animate the camera along a path</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.5.1/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.5.1/mapbox-gl.js"></script>
+<script src='https://mapbox.github.io/mapbox-gl-markers/example-geojson.js'></script>
+    <script src='https://mapbox.github.io/mapbox-gl-markers/dist/mapbox-gl-markers.js'></script>
+    <link href='https://mapbox.github.io/mapbox-gl-markers/dist/mapbox-gl-markers.css' rel='stylesheet' />
+<style>
+body { margin: 0; padding: 0; }
+#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+</style>
+<style>
+.legend {
+background-color: #fff;
+border-radius: 3px;
+bottom: 30px;
+box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+padding: 10px;
+position: absolute;
+right: 10px;
+z-index: 1;
+width:15%;	
+}
+.legend1 {
+
+border-radius: 3px;
+bottom: 30px;
+
+font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+padding: 10px;
+position: absolute;
+left: 10px;
+z-index: 1;
+width:15%;	
+}
+
+.legend2 {
+
+border-radius: 3px;
+top: 1px;
+
+font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+padding: 10px;
+position: absolute;
+right: 1px;
+z-index: 3;
+
+}
+ 
+.legend h4 {
+margin: 0 0 10px;
+}
+ 
+.legend div span {
+border-radius: 30%;
+display: inline-block;
+height: 20px;
+margin-right: 5px;
+width: 20px;
+}
+</style>
+<style>
+.marker {
+  background-image: url('https://www.mapbox.com/help/demos/custom-markers-gl-js/mapbox-icon.png');
+  background-size: cover;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+ /* -webkit-box-shadow: 2px 2px 14px -2px rgba(0,0,0,0.1);
+  -moz-box-shadow: 2px 2px 14px -2px rgba(0,0,0,0.1);
+  box-shadow: 2px 2px 14px -2px rgba(0,0,0,0.1);
+  transition: box-shadow 0.4s ease-in-out;*/
+}
+.marker:hover,.marker.active{
+  -webkit-box-shadow: 2px 2px 14px 1px rgba(0,0,0,1);
+  -moz-box-shadow: 2px 2px 14px 1px rgba(0,0,0,1);
+  box-shadow: 2px 2px 14px 1px rgba(0,0,0,1);
+  transition: box-shadow 0.1s ease-in-out;
+}
+
+.mapboxgl-popup {
+  max-width: 250px;
+}
+
+.mapboxgl-popup-content {
+  text-align: center;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.mapboxgl-ctrl-markers {
+  background-image: url("data:image/svg+xml,%3Csvg width='30' height='30' xmlns='http://www.w3.org/2000/svg'%3E%3Ctitle%3Emarker-stroked-15%3C/title%3E%3Cg%3E%3Ctitle%3Ebackground%3C/title%3E%3Crect fill='none' id='canvas_background' height='32' width='32' y='-1' x='-1'/%3E%3C/g%3E%3Cg%3E%3Ctitle%3ELayer 1%3C/title%3E%3Cpath d='m15.01872,22.45972l-0.4,-0.495c-0.973,-1.189 -4.9,-6.556 -4.9,-9.16a5.066,5.066 0 0 1 4.836,-5.286q0.222,-0.01 0.445,0a5.066,5.066 0 0 1 5.286,4.836q0.01,0.225 0,0.45c0,2.213 -2.669,6.111 -4.678,8.851l-0.589,0.804zm-0.019,-13.955a4.077,4.077 0 0 0 -4.3,4.3c0,1.832 2.759,6.038 4.286,8.034c1.25,-1.71 4.315,-5.989 4.315,-8.034a4.077,4.077 0 0 0 -4.3,-4.3l-0.001,0z' id='Layer_7'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.mapboxgl-ctrl-map {
+  background-image: url('data:image/svg+xml;charset=utf8,<svg%20xmlns="http://www.w3.org/2000/svg"%20fill="#333333%22%20viewBox=%22-10%20-10%2060%2060%22%20preserveAspectRatio=%22xMidYMid%20meet%22%3E%3Cg%3E%3Cpath%20d=%22m25%2031.640000000000004v-19.766666666666673l-10-3.511666666666663v19.766666666666666z%20m9.140000000000008-26.640000000000004q0.8599999999999923%200%200.8599999999999923%200.8600000000000003v25.156666666666666q0%200.625-0.625%200.783333333333335l-9.375%203.1999999999999993-10-3.5133333333333354-8.906666666666668%203.4383333333333326-0.2333333333333334%200.07833333333333314q-0.8616666666666664%200-0.8616666666666664-0.8599999999999994v-25.156666666666663q0-0.625%200.6233333333333331-0.7833333333333332l9.378333333333334-3.198333333333334%2010%203.5133333333333336%208.905000000000001-3.4383333333333344z%22%3E%3C/path%3E%3C/g%3E%3C/svg%3E');
+}
+
+.mapboxgl-ctrl.markers input{
+  padding: 5px;
+}
+
+</style>
+
+</head>
+<body>
+<div id="map"></div>
+<div id="state-legend" class="legend">
+<h4>LEGENDA</h4>
+<div><span style=" background-size:20px 20px; background-image:url(http://maps.google.com/mapfiles/kml/pal4/icon16.png)"></span>Início</div>
+<div><span style=" background-size:20px 20px; background-image:url(http://maps.google.com/mapfiles/kml/pal5/icon13.png)"></span>Fim</div>
+<div><span style=" background-size:20px 20px; background-image:url(http://maps.google.com/mapfiles/kml/pal2/icon8.png)"></span>Agente Semob - Cabedelo</div>
+<div><span style=" background-size:20px 20px; background-image:url(http://maps.google.com/mapfiles/kml/pal4/icon31.png)"></span>Viatura Semob - Cabedelo</div>
+<div><span style=" background-size:20px 20px; background-image:url(http://maps.google.com/mapfiles/kml/paddle/red-circle.png)"></span>Ponto de retorno dos corredores</div>
+<div><span style=" background-size:20px 20px; background-image:url(http://maps.google.com/mapfiles/kml/pal5/icon37.png)"></span>Marcadores de quilometragem</div>
+<div><span style="background-color: #087a06"></span>Percurso</div>
+
+</div>
+ 
+<div id="state-legend" class="legend1"><a href="http://thiagofelipe.weebly.com/" target="_blank"><img src="https://static.wixstatic.com/media/3176ad_c4b227ce58c9443d88423c1452451073~mv2.png/v1/fill/w_166,h_195,al_c,q_85,usm_0.66_1.00_0.01/logo-semob-cabedelo.webp4" width="auto" height="auto" border="0" ></a></div>
+
+<div id="state-legend" class="legend2"><a href="http://thiagofelipe.weebly.com/" target="_blank"><img src="https://inscricoes.trcrono.com.br/painel/upload/img/inscricao/img-07-9d8d4c2cb5fb596fb77526464ac3f0f4.jpeg" width="120px" height="160" border="0" ></a></div>
+
+<div><span style=" background-size:20px 20px; background-image:url(http://maps.google.com/mapfiles/kml/pal4/icon16.png)"></span>Início</div>
+
+
+</div>
+ 
+<div id="county-legend" class="legend" style="display: none">
+<h4>Population</h4>
+<div><span style="background-color: #723122"></span>1,000,000</div>
+<div><span style="background-color: #8b4225"></span>500,000</div>
+<div><span style="background-color: #a25626"></span>100,000</div>
+<div><span style="background-color: #b86b25"></span>50,000</div>
+<div><span style="background-color: #ca8323"></span>10,000</div>
+<div><span style="background-color: #da9c20"></span>5,000</div>
+<div><span style="background-color: #e6b71e"></span>1,000</div>
+<div><span style="background-color: #eed322"></span>100</div>
+<div><span style="background-color: #f2f12d"></span>0</div>
+</div>
+<!--<script src="https://docs.mapbox.com/mapbox-gl-js/assets/routes.js"></script>-->
+<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+
+<script> 
+var exampleGeojson = {
+  "type": "FeatureCollection",
+  "features": [
+    {
+     "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "marker-image": "http://maps.google.com/mapfiles/kml/pal4/icon16.png",
+        "title": "Começo"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -34.832255244255066,
+            -7.028639551881689 
+        ]
+      }
+    },
+	
+    {
+      "type": "Feature",
+      "properties": {
+        "stroke": "#555555",
+        "stroke-width": 2,
+        "stroke-opacity": 1,
+        "fill": "#c8c01f",
+        "fill-opacity": 0.5,
+        "id": 1
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -46.40625,
+              50.958426723359935
+            ],
+            [
+              -71.015625,
+              35.460669951495305
+            ],
+            [
+              -68.5546875,
+              22.268764039073968
+            ],
+            [
+              -39.7265625,
+              4.214943141390651
+            ],
+            [
+              -21.4453125,
+              6.315298538330033
+            ],
+            [
+              -21.09375,
+              24.206889622398023
+            ],
+            [
+              -13.7109375,
+              40.17887331434696
+            ],
+            [
+              -17.9296875,
+              53.54030739150022
+            ],
+            [
+              -39.7265625,
+              56.559482483762245
+            ],
+            [
+              -46.40625,
+              50.958426723359935
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "marker-image": "http://maps.google.com/mapfiles/kml/pal3/icon4.png",
+        "title": "Final"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -34.83738899230957,
+            -7.068323733043051
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "marker-image": "http://maps.google.com/mapfiles/kml/pal3/icon0.png"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -34.83734607696533,
+          -7.035688613450787
+        ]
+      }
+    },
+	{
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "marker-image": "http://maps.google.com/mapfiles/kml/pal3/icon1.png"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -34.840790033340454,
+          -7.043663933206015
+        ]
+      }
+    },
+	{
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "marker-image": "http://maps.google.com/mapfiles/kml/pal3/icon2.png"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -34.842911660671234,
+          -7.05235250995531
+        ]
+      }
+    },
+	{
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "marker-image": "http://maps.google.com/mapfiles/kml/pal3/icon3.png"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -34.84246373176575,
+          -7.060471283930532
+        ]
+      }
+    },
+	{
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "marker-image": "http://maps.google.com/mapfiles/kml/paddle/3.png"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+         -34.83909158624274,
+          -7.039798859375479
+        ]
+      }
+    },
+	{
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "marker-image": "http://maps.google.com/mapfiles/kml/paddle/5.png"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+         -34.84258506123837,
+          -7.049756416640217 
+        ]
+      }
+    },
+	{
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "marker-image": "http://maps.google.com/mapfiles/kml/paddle/10.png"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+         -34.83791470527649,
+          -7.068579268129014
+        ]
+      }
+    },
+	{
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "marker-image": "http://maps.google.com/mapfiles/kml/pal2/icon8.png"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+        -34.83198165893554,
+          -7.027383061397915
+        ]
+      }
+    },
+	{
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "marker-image": "http://maps.google.com/mapfiles/kml/pal2/icon8.png"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+        -34.83309745788574,
+          -7.029033535486317
+        ]
+      }
+    },
+	{
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "marker-image": "http://maps.google.com/mapfiles/kml/pal4/icon23.png"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+        -34.834749698638916,
+          -7.031450670829849
+        ]
+      }
+    },
+	{
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "marker-image": "http://maps.google.com/mapfiles/kml/pal2/icon8.png"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+        -34.836519956588745,
+          -7.032877520151345
+        ]
+      }
+    },
+	{
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "marker-image": "http://maps.google.com/mapfiles/kml/pal2/icon8.png"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+        -34.83818292617798,
+          -7.036125183231796
+        ]
+      }
+    },
+	{
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "marker-image": "http://maps.google.com/mapfiles/kml/pal4/icon23.png"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+        -34.841991662979126,
+          -7.045261110268109
+        ]
+      }
+    },
+	{
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "marker-image": "http://maps.google.com/mapfiles/kml/pal2/icon8.png"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+        -34.843080639839165,
+          -7.049435040341366
+        ]
+      }
+    },
+	{
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "marker-image": "http://maps.google.com/mapfiles/kml/pal2/icon8.png"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+       -34.84336495399475,
+          -7.051915955452222
+        ]
+      }
+    },
+	{
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "marker-image": "http://maps.google.com/mapfiles/kml/pal5/icon13.png"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+       -34.83186364173889,
+          -7.028809923211166
+        ]
+      }
+    },
+	
+	
+    /*{
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "title": "No Style"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -34.83761966228485,
+            -7.036577724644599
+        ]
+      }
+    },*/
+   /* {
+      "type": "Feature",
+      "properties": {
+        "stroke": "#04fa00",
+        "stroke-width": 5,
+        "stroke-opacity": 1,
+        "title": "3km"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -34.832249879837036,
+            -7.0286502000915965
+          ],
+          [
+            -34.83280777931213,
+            -7.029416870564801
+          ],
+          [
+            -34.83307600021362,
+            -7.029906687149316
+          ],
+          [
+            -34.83337640762329,
+            -7.030364558707021
+          ],
+          [
+            -34.83383774757385,
+            -7.031152522656831
+          ],
+          [
+            -34.83407378196716,
+            -7.031567800416898
+          ],
+          [
+            -34.834556579589844,
+            -7.032249281064811
+          ],
+          [
+            -34.83566164970398,
+            -7.0329733531576295
+          ],
+          [
+            -34.836530685424805,
+            -7.0335589988775284
+          ],
+          [
+            -34.83674526214599,
+            -7.033761312681851
+          ],
+          [
+            -34.83689546585083,
+            -7.034123347690668
+          ],
+          [
+            -34.83713150024414,
+            -7.034890009130475
+          ],
+          [
+            -34.83736753463745,
+            -7.035709909547191
+          ],
+          [
+            -34.837571382522576,
+            -7.036465920336586
+          ],
+          [
+            -34.83807563781738,
+            -7.037509426164066
+          ],
+          [
+            -34.83841896057129,
+            -7.038339969941807
+          ],
+          [
+            -34.83897686004639,
+            -7.039649670571146
+          ]
+        ]
+      }
+    }*/
+  ]
+};
+</script>
+
+<script> 
+/* eslint-disable no-unused-vars */
+const routes = {
+    target: [
+       [
+            -34.832255244255066,
+            -7.028639551881689
+          ],
+          [
+            -34.83282387256622,
+            -7.029491407904438
+          ],
+          [
+            -34.833129644393914,
+            -7.0299546039613725
+          ],
+          [
+            -34.83369290828705,
+            -7.030928911401494
+          ],
+          [
+            -34.834014773368835,
+            -7.031455994902641
+          ],
+          [
+            -34.83447074890137,
+            -7.03222266074576
+          ],
+          [
+            -34.83514130115509,
+            -7.0326592337854
+          ],
+          [
+            -34.83594059944153,
+            -7.033165019110901
+          ],
+          [
+            -34.83664333820343,
+            -7.033665479838157
+          ],
+          [
+            -34.83682572841644,
+            -7.033942330221545
+          ],
+          [
+            -34.8368901014328,
+            -7.034086079393967
+          ],
+          [
+            -34.83712613582611,
+            -7.034932601395569
+          ],
+          [
+            -34.837512373924255,
+            -7.03623698762188
+          ],
+          [
+            -34.83761966228485,
+            -7.036577724644599
+          ],
+          [
+            -34.83812391757965,
+            -7.0376797942396445
+          ],
+          [
+            -34.83885884284973,
+            -7.039378147573682
+          ],
+          [
+            -34.839502573013306,
+            -7.040671873371691
+          ],
+          [
+            -34.84012484550476,
+            -7.042029482983935
+          ],
+          [
+            -34.84068274497986,
+            -7.043307229577289
+          ],
+          [
+            -34.84118163585663,
+            -7.044382663564816
+          ],
+          [
+            -34.84141767024994,
+            -7.044936351377779
+          ],
+          [
+            -34.841541051864624,
+            -7.045452771145813
+          ],
+          [
+            -34.842050671577454,
+            -7.047156419909394
+          ],
+          [
+            -34.84240472316742,
+            -7.048258464367817
+          ],
+          [
+            -34.84260857105255,
+            -7.049908864210852
+          ],
+          [
+            -34.84282314777374,
+            -7.051447457478979
+          ],
+          [
+            -34.84305381774902,
+            -7.053630228087356
+          ],
+          [
+            -34.84322547912598,
+            -7.055136866188277
+          ],
+          [
+            -34.84355270862579,
+            -7.056430547994851
+          ],
+          [
+            -34.84383165836334,
+            -7.057537894158879
+          ],
+          [
+            -34.84389066696167,
+            -7.057793435205101
+          ],
+          [
+            -34.84387457370758,
+            -7.058261926756652
+          ],
+          [
+            -34.843767285346985,
+            -7.058762360390085
+          ],
+          [
+            -34.843010902404785,
+            -7.058592000065009
+          ],
+          [
+            -34.84268367290497,
+            -7.059795168518112
+          ],
+          [
+            -34.842233061790466,
+            -7.061179340744081
+          ],
+          [
+            -34.84166443347931,
+            -7.062515595386581
+          ],
+          [
+            -34.84088122844696,
+            -7.0639370253698734
+          ],
+          [
+            -34.84007656574249,
+            -7.0651721220320045
+          ],
+          [
+            -34.839250445365906,
+            -7.066252828904528
+          ],
+          [
+            -34.83805954456329,
+            -7.0675411559632595
+          ],
+          [
+            -34.837571382522576,
+            -7.068062874163713
+          ],
+          [
+            -34.83738899230957,
+            -7.068323733043051
+          ],
+          [
+            -34.837571382522576,
+            -7.068062874163713
+          ],
+          [
+            -34.83805954456329,
+            -7.0675411559632595
+          ],
+          [
+            -34.839250445365906,
+            -7.066252828904528
+          ],
+          [
+            -34.84007656574249,
+            -7.0651721220320045
+          ],
+          [
+            -34.84088122844696,
+            -7.0639370253698734
+          ],
+          [
+            -34.84166443347931,
+            -7.062515595386581
+          ],
+          [
+            -34.842233061790466,
+            -7.061179340744081
+          ],
+          [
+            -34.84268367290497,
+            -7.059795168518112
+          ],
+		   [
+            -34.843010902404785,
+            -7.058592000065009
+          ],
+          [
+            -34.843767285346985,
+            -7.058762360390085
+          ],
+          [
+            -34.84387457370758,
+            -7.058261926756652
+          ],
+          [
+            -34.84389066696167,
+            -7.057793435205101
+          ],
+          [
+            -34.84383165836334,
+            -7.057537894158879
+          ],
+          [
+            -34.84355270862579,
+            -7.056430547994851
+          ],
+          [
+            -34.84322547912598,
+            -7.055136866188277
+          ],
+          [
+            -34.84305381774902,
+            -7.053630228087356
+          ],
+          [
+            -34.84282314777374,
+            -7.051447457478979
+          ],
+          [
+            -34.84260857105255,
+            -7.049908864210852
+          ],
+          [
+            -34.84240472316742,
+            -7.048258464367817
+          ],
+          [
+            -34.842050671577454,
+            -7.047156419909394
+          ],
+          [
+            -34.841541051864624,
+            -7.045452771145813
+          ],
+          [
+            -34.84141767024994,
+            -7.044936351377779
+          ],
+          [
+            -34.84118163585663,
+            -7.044382663564816
+          ],
+          [
+            -34.84068274497986,
+            -7.043307229577289
+          ],
+          [
+            -34.84012484550476,
+            -7.042029482983935
+          ],
+          [
+            -34.839502573013306,
+            -7.040671873371691
+          ],
+          [
+            -34.83885884284973,
+            -7.039378147573682
+          ],
+          [
+            -34.83812391757965,
+            -7.0376797942396445
+          ],
+          [
+            -34.83761966228485,
+            -7.036577724644599
+          ],
+          [
+            -34.837512373924255,
+            -7.03623698762188
+          ],
+          [
+            -34.83712613582611,
+            -7.034932601395569
+          ],
+          [
+            -34.8368901014328,
+            -7.034086079393967
+          ],
+          [
+            -34.83682572841644,
+            -7.033942330221545
+          ],
+          [
+            -34.83664333820343,
+            -7.033665479838157
+          ],
+          [
+            -34.83594059944153,
+            -7.033165019110901
+          ],
+          [
+            -34.83514130115509,
+            -7.0326592337854
+          ],
+          [
+            -34.83447074890137,
+            -7.03222266074576
+          ],
+          [
+            -34.834014773368835,
+            -7.031455994902641
+          ],
+          [
+            -34.83369290828705,
+            -7.030928911401494
+          ],
+          [
+            -34.833129644393914,
+            -7.0299546039613725
+          ],
+          [
+            -34.83282387256622,
+            -7.029491407904438
+          ],
+		[
+            -34.832255244255066,
+            -7.028639551881689
+          ]
+
+    ],
+    camera: [
+        [
+            -34.828290939331055,
+            -7.028320105470558
+          ],
+          [
+            -34.828763008117676,
+            -7.0316423374114585
+          ],
+          [
+            -34.8306941986084,
+            -7.0344534381879775
+          ],
+          [
+            -34.83223915100098,
+            -7.035986758711549
+          ],
+          [
+            -34.83532905578613,
+            -7.040501506394676
+          ],
+          [
+            -34.83721733093262,
+            -7.04569767104091
+          ],
+          [
+            -34.83893394470215,
+            -7.051319685222218
+          ],
+          [
+            -34.8391056060791,
+            -7.056941631169
+          ],
+          [
+            -34.838762283325195,
+            -7.058304516874185
+          ],
+          [
+            -34.837303161621094,
+            -7.06068955719913
+          ],
+          [
+            -34.83558654785156,
+            -7.06401155715854
+          ],
+          [
+            -34.83464241027832,
+            -7.065204064143288
+          ],
+		  [
+            -34.83558654785156,
+            -7.06401155715854
+          ],
+          [
+            -34.837303161621094,
+            -7.06068955719913
+          ],
+          [
+            -34.838762283325195,
+            -7.058304516874185
+          ],
+          [
+            -34.83893394470215,
+            -7.051319685222218
+          ],
+          [
+            -34.83721733093262,
+            -7.04569767104091
+          ],
+          [
+            -34.83532905578613,
+            -7.040501506394676
+          ],
+          [
+            -34.83223915100098,
+            -7.035986758711549
+          ],
+          [
+            -34.8306941986084,
+            -7.0344534381879775
+          ],
+          [
+            -34.828763008117676,
+            -7.0316423374114585
+          ],
+		  
+    ]
+};
+
+</script>
+<script>
+	mapboxgl.accessToken = 'pk.eyJ1IjoidGhpYWdvZmVsaXBlODYiLCJhIjoiY2t0eXFjM2l2MzVvcjJ2bzJxOXp5cDJnbiJ9.dKE2NqOuqDGpB7ZPB0CUQQ';
+    const map = new mapboxgl.Map({
+        container: 'map',
+        zoom: 13,
+        center: [-34.831295013427734, -7.0267015736130665],
+        pitch: 65,
+        bearing: -60,
+        style: 'mapbox://styles/mapbox/streets-v11',
+        interactive: false
+    });
+
+map.addControl(new MapboxMarkers(exampleGeojson));
+
+    // `routes` comes from https://docs.mapbox.com/mapbox-gl-js/assets/routes.js,
+    // which has properties that are in the shape of an array of arrays that correspond
+    //  to the `coordinates` property of a GeoJSON linestring, for example:
+    // [
+    //   [6.56158, 46.05989],
+    //   [6.56913, 46.05679],
+    //   ...
+    // ]
+    // this is the path the camera will look at
+    const targetRoute = routes.target;
+    // this is the path the camera will move along
+    const cameraRoute = routes.camera;
+
+    // add terrain, sky, and line layers once the style has loaded
+    map.on('load', () => {
+        map.addSource('mapbox-dem', {
+            'type': 'raster-dem',
+            'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+            'tileSize': 512,
+            'maxzoom': 14
+        });
+        map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+        map.addLayer({
+            'id': 'sky',
+            'type': 'sky',
+            'paint': {
+                'sky-type': 'atmosphere',
+                'sky-atmosphere-sun': [0.0, 90.0],
+                'sky-atmosphere-sun-intensity': 15
+            }
+        });
+        map.addSource('trace', {
+            type: 'geojson',
+            data: {
+                'type': 'Feature',
+                'properties': {},
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': targetRoute
+                }
+            }
+        });
+        map.addLayer({
+            type: 'line',
+            source: 'trace',
+            id: 'line',
+            paint: {
+                'line-color': 'green',
+                'line-width': 4
+            },
+            layout: {
+                'line-cap': 'round',
+                'line-join': 'round'
+            }
+        });
+    });
+
+    // wait for the terrain and sky to load before starting animation
+    map.on('load', () => {
+        const animationDuration = 90000;
+        const cameraAltitude = 1000;
+        // get the overall distance of each route so we can interpolate along them
+        const routeDistance = turf.lineDistance(turf.lineString(targetRoute));
+        const cameraRouteDistance = turf.lineDistance(
+            turf.lineString(cameraRoute)
+        );
+
+        let start;
+
+        function frame(time) {
+            if (!start) start = time;
+            // phase determines how far through the animation we are
+            const phase = (time - start) / animationDuration;
+
+            // phase is normalized between 0 and 1
+            // when the animation is finished, reset start to loop the animation
+            if (phase > 1) {
+                // wait 1.5 seconds before looping
+                setTimeout(() => {
+                    start = 0.0;
+                }, 1500);
+            }
+
+            // use the phase to get a point that is the appropriate distance along the route
+            // this approach syncs the camera and route positions ensuring they move
+            // at roughly equal rates even if they don't contain the same number of points
+            const alongRoute = turf.along(
+                turf.lineString(targetRoute),
+                routeDistance * phase
+            ).geometry.coordinates;
+
+            const alongCamera = turf.along(
+                turf.lineString(cameraRoute),
+                cameraRouteDistance * phase
+            ).geometry.coordinates;
+
+            const camera = map.getFreeCameraOptions();
+
+            // set the position and altitude of the camera
+            camera.position = mapboxgl.MercatorCoordinate.fromLngLat(
+                {
+                    lng: alongCamera[0],
+                    lat: alongCamera[1]
+                },
+                cameraAltitude
+            );
+
+            // tell the camera to look at a point along the route
+            camera.lookAtPoint({
+                lng: alongRoute[0],
+                lat: alongRoute[1]
+            });
+
+            map.setFreeCameraOptions(camera);
+
+            window.requestAnimationFrame(frame);
+        }
+
+        window.requestAnimationFrame(frame);
+    });
+</script>
+
+</body>
+</html>
