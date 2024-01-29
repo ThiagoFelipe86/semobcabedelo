@@ -7,7 +7,7 @@
         "id": "000001",
         "bairro": "Intermares",
         "comprimento": 266.26,
-        "etapa": 1,
+        "etapa": "p1",
         "status": "Pavimentada",
         "nome": "Rua Golfo Danzing"
       },
@@ -41,7 +41,7 @@
       "type": "Feature",
       "properties": {
         "comprimento": 269.65,
-        "etapa": 1,
+        "etapa": "p1",
         "status": "Pavimentada",
         "bairro": "Intermares",
         "id": "000002",
@@ -68,7 +68,7 @@
         "id": "000003",
         "bairro": "Intermares",
         "comprimento": "267.60",
-        "etapa": 1,
+        "etapa": "p1",
         "status": "Pavimentada",
         "nome": "Rua Golfo Finlândia"
       },
@@ -93,7 +93,7 @@
         "id": "000004",
         "bairro": "Intermares",
         "comprimento": 269.57,
-        "etapa": 1,
+        "etapa": "p1",
         "status": "Pavimentada",
         "nome": "Rua Golfo Guiné"
       },
@@ -118,7 +118,7 @@
         "id": "000005",
         "bairro": "Intermares",
         "comprimento": 436.85,
-        "etapa": 1,
+        "etapa": "p1",
         "status": "Pavimentada",
         "nome": "Rua Mar Cáspio"
       },
@@ -151,7 +151,7 @@
         "comprimento": 443.07,
         "nome": "Rua Mar Cáspio",
         "status": "Pavimentada",
-        "etapa": 1,
+        "etapa": "p1",
         "bairro": "Intermares",
         "id": "000006"
       },
@@ -184,7 +184,7 @@
         "id": "000007",
         "bairro": "Intermares",
         "comprimento": 666.79,
-        "etapa": 1,
+        "etapa": "p1",
         "status": "Pavimentada",
         "nome": "Rua Mar Coral"
       },
